@@ -16,25 +16,24 @@ print(houseData.tail())
 Explanatory Variables:
 1.	Number of bathrooms (bathrooms) 
 2.	Number of bedrooms (bedrooms) # Exclude the weird one
- (transform the bathroom) variable using quadratic transformation
+    (transform the bathroom) variable using quadratic transformation
 3.	Square footage of living spaces (sqft_living)
-4.	Square footage of the lot (sqft_lot) # Delete it
-5.	Square footage of the basement (sqft_basement) # Divide it into 
- 0 - doesn't have a basement and 1 - has a basement
-6.	Square footage above ground level (sqft_above) 
-7.	Number of floors (floors) # Quadratic transformation
-8.	View quality (scale of 0-4) (view)
-9.	Condition of the house (scale of 1-5) (condition)
-10.	Year built (yr_built) # Exclude outliers
-11.	Year renovated (yr_renovated) # Transform into the number of years since renovation
-12.	Grade of building’s construction and design (scale of 1-13) (grade)
+4.	Square footage of the basement (sqft_basement) # Divide it into 
+    0 - doesn't have a basement and 1 - has a basement
+5.	Square footage above ground level (sqft_above) 
+6.	Number of floors (floors) # Quadratic transformation
+7.	View quality (scale of 0-4) (view)
+8.	Condition of the house (scale of 1-5) (condition)
+9.	Year built (yr_built) # Exclude outliers
+10.	Year renovated (yr_renovated) # Transform into the number of years since renovation
+11.	Grade of building’s construction and design (scale of 1-13) (grade)
+12. The square footage of interior housing living space for the nearest 15 neighbors (sqft_living15)
 """
 
 # The list of the variables that are considered for the model
 
 column_names = ['bathrooms', 'bedrooms', 'I(bedrooms ** 2)', 'sqft_living', 'sqft_basement_dummy', 'sqft_above', 'floors',
-                'I(floors ** 2)', 'view', 'condition', 'yr_built', 'yr_renovated_dummy', 'grade', 'sqft_living15',
-                'sqft_lot15']
+                'I(floors ** 2)', 'view', 'condition', 'yr_built', 'yr_renovated_dummy', 'grade', 'sqft_living15']
 
 formula = ('price ~ bathrooms + bedrooms + I(bedrooms ** 2) + sqft_living + sqft_basement_dummy + '
            'sqft_above + floors + I(floors ** 2) + view + condition + yr_built + '
@@ -51,27 +50,33 @@ houseData['yr_renovated_dummy'] = np.where(houseData['yr_renovated'] == 0,
                                            current_year - houseData['yr_built'],
                                            current_year - houseData['yr_renovated'])
 
+houseData['log_price'] = np.log(houseData['price'])
 
+model = sm.formula.ols(formula=formula, data=houseData).fit()
+print(f"Regular R^2: {model.rsquared}")
+print(f"Adjusted R^2: {model.rsquared_adj}")
+print(f"Calculated Adj. R^2: {1 - (1 - model.rsquared) * (21613-1) / (21613 - 15 - 1)}")
 def basic_plot():  # Plotting every variable to 'price'
     for column in column_names:
-        sns.scatterplot(data=houseData, x=column, y='price')
-        plt.show()
+        if not "**" in column:
+            sns.scatterplot(data=houseData, x=column, y='price')
+            plt.show()
 
 
-# basic_plot()
+basic_plot()
 
 
 def response_normality_check():  # Checking the normality of the response variable
-    sm.qqplot(houseData['price'], line='s')
+    sm.qqplot(houseData['log_price'], line='s')
     plt.title('QQ plot price distribution')
     plt.show()
 
-    sns.displot(houseData['price'], bins=50)
+    sns.displot(houseData['log_price'], bins=50)
     plt.title('The distribution of housing prices')
     plt.show()
 
 
-# response_normality_check()
+response_normality_check()
 
 
 def stepwise_regression(data, columns, response, forward=True, use_p=True):
@@ -166,12 +171,12 @@ def stepwise_regression(data, columns, response, forward=True, use_p=True):
         return remaining_columns
 
 
-print(
-    "Forward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "price", True, True)) + "\n" +
-    "Forward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "price", True, False)) + "\n" +
-    "Backward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "price", False, True)) + "\n" +
-    "Backward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "price", False, False))
-)
+# print(
+#     "Forward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "price", True, True)) + "\n" +
+#     "Forward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "price", True, False)) + "\n" +
+#     "Backward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "price", False, True)) + "\n" +
+#     "Backward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "price", False, False))
+# )
 
 # print(model_fit.summary())
 # print(model_fit.rsquared_adj, model_fit.rsquared)
