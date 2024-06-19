@@ -9,7 +9,7 @@ sns.set_style("whitegrid")
 
 # Retrieving the data from the database
 raw_houseData = pd.read_csv('Rostyslav_Redchyts-Niels_Metselaar-data.csv')
-houseData = raw_houseData.drop(columns=['id', 'date', 'waterfront', 'zipcode', 'lat', 'long'])
+houseData = raw_houseData.drop(columns=['id', 'date', 'zipcode', 'lat', 'long'])
 print(houseData.tail())
 
 """
@@ -32,12 +32,14 @@ Explanatory Variables:
 
 # The list of the variables that are considered for the model
 
-column_names = ['bathrooms', 'bedrooms', 'I(bedrooms ** 2)', 'sqft_living', 'sqft_basement_dummy', 'sqft_above', 'floors',
-                'I(floors ** 2)', 'view', 'condition', 'yr_built', 'yr_renovated_dummy', 'grade', 'sqft_living15']
+column_names = ['bathrooms', 'bedrooms', 'I(bedrooms ** 2)', 'sqft_living', 'sqft_basement_dummy', 'sqft_above',
+                'floors',
+                'I(floors ** 2)', 'view', 'condition', 'yr_built', 'yr_renovated_dummy', 'grade', 'sqft_living15'
+    , 'waterfront']
 
-formula = ('price ~ bathrooms + bedrooms + I(bedrooms ** 2) + sqft_living + sqft_basement_dummy + '
+formula = ('log_price ~ bathrooms + bedrooms + I(bedrooms ** 2) + sqft_living + sqft_basement_dummy + '
            'sqft_above + floors + I(floors ** 2) + view + condition + yr_built + '
-           'yr_renovated_dummy + grade + sqft_living15 + sqft_lot15')
+           'yr_renovated_dummy + grade + sqft_living15 + sqft_lot15 + waterfront')
 
 # Adding the column, named 'sqft_basement_dummy' to the database. This variable equates to 1 if the property has a
 # basement and 0 when it doesn't
@@ -55,12 +57,28 @@ houseData['log_price'] = np.log(houseData['price'])
 model = sm.formula.ols(formula=formula, data=houseData).fit()
 print(f"Regular R^2: {model.rsquared}")
 print(f"Adjusted R^2: {model.rsquared_adj}")
-print(f"Calculated Adj. R^2: {1 - (1 - model.rsquared) * (21613-1) / (21613 - 15 - 1)}")
-def basic_plot():  # Plotting every variable to 'price'
+print(f"Calculated Adj. R^2: {1 - (1 - model.rsquared) * (21613 - 1) / (21613 - 15 - 1)}")
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+import numpy as np  # For mathematical calculations
+from sklearn.preprocessing import StandardScaler
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+def basic_plot():
     for column in column_names:
-        if not "**" in column:
-            sns.scatterplot(data=houseData, x=column, y='price')
+        if "**" not in column:
+            # Plotting the data
+            sns.regplot(data=houseData, x=column, y='price', scatter_kws={"color": "blue"}, line_kws={"color": "red"})
             plt.show()
+
+            # Calculating and printing the Pearson correlation coefficient
+            correlation = houseData[[column, 'price']].corr().iloc[0, 1]
+            print(f"Correlation between {column} and price: {correlation:.2f}")
 
 
 basic_plot()
@@ -144,6 +162,7 @@ def stepwise_regression(data, columns, response, forward=True, use_p=True):
                 used_columns.append(min_fit[0])
                 remaining_columns.remove(min_fit[0])
             else:
+                print("optimal")
                 optimal_flag = True
         elif forward and (not use_p):
             if max_fit[1] >= prev_best_assessment:
@@ -153,8 +172,8 @@ def stepwise_regression(data, columns, response, forward=True, use_p=True):
             else:
                 optimal_flag = True
         elif (not forward) and use_p:
-            if min_fit[1] > 0.05:
-                remaining_columns.remove(min_fit[0])
+            if max_fit[1] > 0.05:
+                remaining_columns.remove(max_fit[0])
             else:
                 optimal_flag = True
         elif (not forward) and (not use_p):
@@ -171,12 +190,21 @@ def stepwise_regression(data, columns, response, forward=True, use_p=True):
         return remaining_columns
 
 
-# print(
-#     "Forward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "price", True, True)) + "\n" +
-#     "Forward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "price", True, False)) + "\n" +
-#     "Backward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "price", False, True)) + "\n" +
-#     "Backward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "price", False, False))
-# )
+print(
+    "Forward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", True, True)) + "\n" +
+    "Forward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", True, False)) + "\n" +
+    "Backward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", False, True)) + "\n" +
+    "Backward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", False, False))
+)
+
 
 # print(model_fit.summary())
 # print(model_fit.rsquared_adj, model_fit.rsquared)
+
+# test_f = 'log_price ~ bathrooms + sqft_living + yr_built + grade + view + I(floors ** 2) + sqft_living15 + sqft_basement_dummy + waterfront + condition + bedrooms + sqft_above + I(bedrooms ** 2) + floors'
+# model_test = sm.formula.ols(formula=test_f, data=houseData).fit()
+# print(f"Adjusted R^2: {model.rsquared_adj}")
+#
+# test_f += ' + yr_renovated_dummy'
+# model_test_2 = sm.formula.ols(formula=test_f, data=houseData).fit()
+# print(model_test_2.pvalues['yr_renovated_dummy'])
