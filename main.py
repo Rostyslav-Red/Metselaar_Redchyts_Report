@@ -10,6 +10,9 @@ sns.set_style("whitegrid")
 # Retrieving the data from the database
 raw_houseData = pd.read_csv('Rostyslav_Redchyts-Niels_Metselaar-data.csv')
 houseData = raw_houseData.drop(columns=['id', 'date', 'zipcode', 'lat', 'long'])
+houseData.drop(index=houseData[raw_houseData['bedrooms'] == 33].index, inplace=True)
+houseData.reset_index(drop=True, inplace=True)
+
 print(houseData.tail())
 
 """
@@ -35,7 +38,7 @@ Explanatory Variables:
 column_names = ['bathrooms', 'bedrooms', 'I(bedrooms ** 2)', 'sqft_living', 'sqft_basement_dummy', 'sqft_above',
                 'floors',
                 'I(floors ** 2)', 'view', 'condition', 'yr_built', 'yr_renovated_dummy', 'grade', 'sqft_living15'
-    , 'waterfront']
+                , 'waterfront']
 
 formula = ('log_price ~ bathrooms + bedrooms + I(bedrooms ** 2) + sqft_living + sqft_basement_dummy + '
            'sqft_above + floors + I(floors ** 2) + view + condition + yr_built + '
@@ -58,15 +61,6 @@ model = sm.formula.ols(formula=formula, data=houseData).fit()
 print(f"Regular R^2: {model.rsquared}")
 print(f"Adjusted R^2: {model.rsquared_adj}")
 print(f"Calculated Adj. R^2: {1 - (1 - model.rsquared) * (21613 - 1) / (21613 - 15 - 1)}")
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
-import numpy as np  # For mathematical calculations
-from sklearn.preprocessing import StandardScaler
-
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 
 def basic_plot():
@@ -94,7 +88,7 @@ def response_normality_check():  # Checking the normality of the response variab
     plt.show()
 
 
-response_normality_check()
+# response_normality_check()
 
 
 def stepwise_regression(data, columns, response, forward=True, use_p=True):
@@ -190,12 +184,12 @@ def stepwise_regression(data, columns, response, forward=True, use_p=True):
         return remaining_columns
 
 
-print(
-    "Forward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", True, True)) + "\n" +
-    "Forward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", True, False)) + "\n" +
-    "Backward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", False, True)) + "\n" +
-    "Backward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", False, False))
-)
+# print(
+#     "Forward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", True, True)) + "\n" +
+#     "Forward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", True, False)) + "\n" +
+#     "Backward p-values: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", False, True)) + "\n" +
+#     "Backward Adjusted R^2: \n\t" + str(stepwise_regression(houseData, column_names, "log_price", False, False))
+# )
 
 
 # print(model_fit.summary())
