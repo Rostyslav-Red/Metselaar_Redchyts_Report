@@ -10,6 +10,18 @@ sns.set_style("whitegrid")
 # Retrieving the data from the database
 raw_houseData = pd.read_csv('Rostyslav_Redchyts-Niels_Metselaar-data.csv')
 houseData = raw_houseData.drop(columns=['id', 'date', 'zipcode', 'lat', 'long'])
+
+#####
+
+sns.scatterplot(data=houseData, x='sqft_basement', y='price', alpha=0.5, edgecolor=None,
+                hue='price', palette='coolwarm', legend=None).set_title('Price vs. sqft_basement')
+plt.xlabel('sqft_basement')
+plt.ylabel('Price')
+sns.regplot(data=houseData, x='sqft_basement', y='price', scatter=False, color='black')
+plt.show()
+
+#####
+
 houseData.drop(index=houseData[raw_houseData['bedrooms'] == 33].index, inplace=True)
 houseData.reset_index(drop=True, inplace=True)
 
@@ -75,7 +87,7 @@ def basic_plot():
             print(f"Correlation between {column} and price: {correlation:.2f}")
 
 
-basic_plot()
+# basic_plot()
 
 
 def response_normality_check():  # Checking the normality of the response variable
