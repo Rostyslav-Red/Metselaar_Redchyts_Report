@@ -295,3 +295,14 @@ def check_assumptions(rows, cols, variables):
 
 
 check_assumptions(9, 2, columns)
+
+"""
+Forward p-values: 
+	['bathrooms', 'sqft_living', 'yr_built', 'grade', 'view', 'I(floors ** 2)', 'sqft_living15', 'sqft_basement_dummy', 'waterfront', 'condition', 'bedrooms', 'sqft_above', 'I(bedrooms ** 2)', 'floors']
+Forward Adjusted R^2: 
+	['grade', 'yr_built', 'sqft_living', 'view', 'I(floors ** 2)', 'sqft_basement_dummy', 'sqft_living15', 'waterfront', 'bathrooms', 'condition', 'bedrooms', 'sqft_above', 'I(bedrooms ** 2)', 'floors', 'yr_renovated_dummy']
+Backward p-values: 
+	['bathrooms', 'bedrooms', 'I(bedrooms ** 2)', 'sqft_living', 'sqft_basement_dummy', 'sqft_above', 'floors', 'I(floors ** 2)', 'view', 'condition', 'yr_built', 'grade', 'sqft_living15', 'waterfront']
+Backward Adjusted R^2: 
+	['bathrooms', 'bedrooms', 'I(bedrooms ** 2)', 'sqft_living', 'sqft_basement_dummy', 'sqft_above', 'floors', 'I(floors ** 2)', 'view', 'condition', 'yr_built', 'yr_renovated_dummy', 'grade', 'sqft_living15', 'waterfront']
+"""
